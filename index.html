@@ -13,7 +13,6 @@
   <main class="app" id="app">
     <header class="topbar">
       <div class="brand"><span class="brand-mark">MS</span><span>Missione Scienziato</span></div>
-      <button class="icon-button" id="soundToggle" type="button" aria-label="Disattiva la voce" aria-pressed="false">🔊</button>
     </header>
 
     <section class="screen start active" id="startScreen" aria-labelledby="gameTitle">
@@ -21,7 +20,7 @@
       <div class="hero-grid">
         <div class="hero-copy">
           <h1 id="gameTitle">Missione<br><em>Scienziato</em></h1>
-          <p>Ascolta, pensa e rispondi con la tua voce. Ogni scoperta vale una stella!</p>
+          <p>Leggi, pensa e rispondi con la tua voce. Ogni scoperta vale una stella!</p>
           <button class="primary" id="startButton" type="button"><span>Inizia la missione</span><b>→</b></button>
           <p class="privacy">🔒 La tua voce non viene registrata né salvata.</p>
         </div>
@@ -31,7 +30,7 @@
           <div class="lab-card"><span>⚗️</span><b>OSSERVA</b><i></i><i></i></div>
         </div>
       </div>
-      <div class="how"><span><b>1</b> Ascolta</span><span><b>2</b> Rispondi</span><span><b>3</b> Conquista stelle</span></div>
+      <div class="how"><span><b>1</b> Leggi</span><span><b>2</b> Rispondi</span><span><b>3</b> Conquista stelle</span></div>
     </section>
 
     <section class="screen game" id="gameScreen" aria-live="polite">
@@ -51,7 +50,6 @@
           <p class="category" id="category">OSSERVAZIONE</p>
           <h2 id="questionText"></h2>
         </div>
-        <button class="listen" id="repeatButton" type="button">🔊 Riascolta la domanda</button>
         <div class="answer-zone" id="answerZone">
           <div class="mic-rings"><button class="mic" id="micButton" type="button" aria-label="Premi per rispondere">🎙️</button></div>
           <h3 id="micTitle">Premi il microfono</h3>

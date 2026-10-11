@@ -17,13 +17,9 @@ let italianVoice=null;
 function chooseItalianVoice(){
   if(!('speechSynthesis'in window))return null;
   const voices=speechSynthesis.getVoices();
-  const italian=voices.filter(v=>/^it(?:-|_)/i.test(v.lang));
-  const preferred=['elsa','isabella','cosimo','alice','federica','diego','luca','google italiano'];
-  italianVoice=preferred.map(name=>italian.find(v=>v.name.toLowerCase().includes(name))).find(Boolean)
-    ||italian.find(v=>/natural|neural|premium|enhanced/i.test(v.name))
-    ||italian.find(v=>v.localService)
-    ||italian[0]
-    ||null;
+  const nativeItalian=voices.filter(v=>/^it[-_]it$/i.test(v.lang));
+  const femaleNames=['elsa','isabella','alice','federica','paola','carla','bianca','giulia','google italiano'];
+  italianVoice=femaleNames.map(name=>nativeItalian.find(v=>v.name.toLowerCase().includes(name))).find(Boolean)||null;
   return italianVoice;
 }
 if('speechSynthesis'in window){chooseItalianVoice();speechSynthesis.addEventListener?.('voiceschanged',chooseItalianVoice)}
@@ -31,7 +27,7 @@ function normalize(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\
 function isCorrect(text,q){const n=normalize(text);return q.keys.some(group=>group.every(k=>n.includes(normalize(k))))}
 function showScreen(id){screens.forEach(s=>$(s).classList.toggle('active',s===id))}
 function guideState(state,line){const guide=$('#guideWrap');guide.className=`guide-wrap ${state||''}`;if(line)$('#guideLine').textContent=line}
-function speak(text,after){if(!soundOn||!('speechSynthesis'in window)){after?.();return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const voice=italianVoice||chooseItalianVoice();u.lang='it-IT';if(voice)u.voice=voice;u.rate=.88;u.pitch=1;guideState('speaking',text);u.onend=()=>{guideState('',text);after?.()};u.onerror=()=>{guideState('',text);after?.()};speechSynthesis.speak(u)}
+function speak(text,after){if(!soundOn||!('speechSynthesis'in window)){after?.();return}speechSynthesis.cancel();const voice=italianVoice||chooseItalianVoice();if(!voice){showToast('Serve una voce italiana femminile: Elsa o Isabella su Windows.');after?.();return}const u=new SpeechSynthesisUtterance(text);u.lang='it-IT';u.voice=voice;u.rate=.88;u.pitch=1;guideState('speaking',text);u.onend=()=>{guideState('',text);after?.()};u.onerror=()=>{guideState('',text);after?.()};speechSynthesis.speak(u)}
 function renderQuestion(){answered=false;attempts=0;const q=QUESTIONS[index];$('#progressLabel').textContent=`Missione ${index+1} di ${QUESTIONS.length}`;$('#progressFill').style.width=`${(index+1)/QUESTIONS.length*100}%`;$('#scoreValue').textContent=score;$('#category').textContent=q.category;$('#missionIcon').textContent=q.icon;$('#questionText').textContent=q.question;$('#feedback').hidden=true;$('#nextButton').hidden=true;$('#heardBox').hidden=true;$('#typedAnswer').value='';guideState('',q.question);resetMic();setTimeout(()=>speak(q.question),350)}
 function resetMic(){listening=false;$('#answerZone').classList.remove('listening');$('#micTitle').textContent=SpeechRecognition?'Premi il microfono':'Scrivi la risposta qui sotto';$('#micHelp').textContent=SpeechRecognition?'Poi rispondi con una frase breve':'Il riconoscimento vocale non è disponibile in questo browser';$('#fallbackBox').hidden=!!SpeechRecognition}
 function startGame(){index=0;score=0;showScreen('#gameScreen');renderQuestion()}

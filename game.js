@@ -1,6 +1,6 @@
 const QUESTIONS = [
   {category:'SCIENZIATI',icon:'🔍',question:'Che cosa fanno gli scienziati?',answer:'Osservano e spiegano i fenomeni.',keys:[['osserv','spieg','fenomen']],teach:'Osservano e spiegano i fenomeni.'},
-  {category:'NATURA',icon:'⛈️',question:'Quale di questi è un fenomeno naturale?',answer:'Un temporale.',keys:[['temporal']],teach:'Un temporale.'},
+  {category:'NATURA',icon:'⛈️',question:'Puoi fare un esempio di fenomeno naturale?',answer:'Un temporale.',keys:[['temporal'],['pioggia'],['nev'],['terremot'],['eruzion'],['fulmin'],['arcobalen'],['vent']],teach:'Un temporale è un esempio di fenomeno naturale.'},
   {category:'METODO',icon:'🧪',question:'Come si chiama il metodo usato dagli scienziati?',answer:'Metodo scientifico.',keys:[['metodo','scientific']],teach:'Metodo scientifico.'},
   {category:'PRIME FASI',icon:'💭',question:'Quali sono le prime tre fasi del metodo scientifico?',answer:'Osservare, fare domande, formulare ipotesi.',keys:[['osserv','domand','ipotes']],teach:'Osservare, fare domande, formulare ipotesi.'},
   {category:'ULTIME FASI',icon:'📋',question:'Quali sono le ultime tre fasi?',answer:'Fare esperimenti, registrare dati, concludere.',keys:[['esperiment','dat','conclu']],teach:'Fare esperimenti, registrare dati, concludere.'},

@@ -11,16 +11,52 @@ const QUESTIONS = [
   {category:'CONDIVISIONE',icon:'📣',question:'Alla fine, che cosa fa lo scienziato con le sue scoperte?',answer:'Comunica i risultati.',keys:[['comunic'],['condivid'],['raccont'],['present','risultat']],teach:'Lo scienziato comunica e condivide i risultati.'}
 ];
 const $=s=>document.querySelector(s); const screens=['#startScreen','#gameScreen','#resultsScreen'];
-let index=0,score=0,attempts=0,recognition=null,listening=false,answered=false;
+let index=0,score=0,attempts=0,recognition=null,listening=false,answered=false,transcript='',finishRequested=false;
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 function normalize(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()}
 function isCorrect(text,q){const n=normalize(text);return q.keys.some(group=>group.every(k=>n.includes(normalize(k))))}
 function showScreen(id){screens.forEach(s=>$(s).classList.toggle('active',s===id))}
 function guideState(state,line){const guide=$('#guideWrap');guide.className=`guide-wrap ${state||''}`;if(line)$('#guideLine').textContent=line}
 function renderQuestion(){answered=false;attempts=0;const q=QUESTIONS[index];$('#progressLabel').textContent=`Missione ${index+1} di ${QUESTIONS.length}`;$('#progressFill').style.width=`${(index+1)/QUESTIONS.length*100}%`;$('#scoreValue').textContent=score;$('#category').textContent=q.category;$('#missionIcon').textContent=q.icon;$('#questionText').textContent=q.question;$('#feedback').hidden=true;$('#nextButton').hidden=true;$('#heardBox').hidden=true;$('#typedAnswer').value='';guideState('',q.question);resetMic()}
-function resetMic(){listening=false;$('#answerZone').classList.remove('listening');$('#micTitle').textContent=SpeechRecognition?'Premi il microfono':'Scrivi la risposta qui sotto';$('#micHelp').textContent=SpeechRecognition?'Poi rispondi con una frase breve':'Il riconoscimento vocale non è disponibile in questo browser';$('#fallbackBox').hidden=!!SpeechRecognition}
+function resetMic(){listening=false;$('#micButton').textContent='🎙️';$('#micButton').setAttribute('aria-label','Premi per rispondere');$('#answerZone').classList.remove('listening');$('#micTitle').textContent=SpeechRecognition?'Premi il microfono':'Scrivi la risposta qui sotto';$('#micHelp').textContent=SpeechRecognition?'Poi rispondi con una frase breve':'Il riconoscimento vocale non è disponibile in questo browser';$('#fallbackBox').hidden=!!SpeechRecognition}
 function startGame(){index=0;score=0;showScreen('#gameScreen');renderQuestion()}
-function startListening(){if(answered)return;if(!SpeechRecognition){$('#fallbackBox').hidden=false;$('#typedAnswer').focus();return}if(listening){recognition?.stop();return}recognition=new SpeechRecognition();recognition.lang='it-IT';recognition.interimResults=false;recognition.maxAlternatives=3;recognition.continuous=false;recognition.onstart=()=>{listening=true;guideState('listening-guide','Ti ascolto! Raccontami la tua risposta.');$('#answerZone').classList.add('listening');$('#micTitle').textContent='Ti ascolto…';$('#micHelp').textContent='Parla ora!'};recognition.onresult=e=>{const choices=Array.from(e.results[0]).map(x=>x.transcript);const best=choices.find(t=>isCorrect(t,QUESTIONS[index]))||choices[0];evaluate(best)};recognition.onerror=e=>{resetMic();if(e.error==='not-allowed'||e.error==='service-not-allowed'){showToast('Microfono non autorizzato. Puoi scrivere la risposta.');$('#fallbackBox').hidden=false;$('#typedAnswer').focus()}else if(e.error==='no-speech'){showToast('Non ho sentito bene. Riprova o scrivi la risposta.');$('#fallbackBox').hidden=false}else{showToast('Il microfono non è disponibile. Usa la casella di testo.');$('#fallbackBox').hidden=false}};recognition.onend=()=>resetMic();try{recognition.start()}catch(e){resetMic()}}
+function startListening(){
+  if(answered)return;
+  if(!SpeechRecognition){$('#fallbackBox').hidden=false;$('#typedAnswer').focus();return}
+  if(listening){finishRequested=true;recognition.stop();return}
+  transcript='';finishRequested=false;
+  recognition=new SpeechRecognition();
+  recognition.lang='it-IT';recognition.interimResults=true;recognition.continuous=true;
+  recognition.onstart=()=>{
+    listening=true;guideState('listening-guide','Ti ascolto. Prenditi tutto il tempo!');
+    $('#answerZone').classList.add('listening');
+    $('#micTitle').textContent='Premi quando hai finito';
+    $('#micHelp').textContent='Puoi fare delle pause. Premi di nuovo per inviare.';
+    $('#micButton').textContent='✓';$('#micButton').setAttribute('aria-label','Ho finito');
+  };
+  let collected='';
+  recognition.onresult=e=>{
+    let finalPart='',interim='';
+    for(let i=0;i<e.results.length;i++){if(e.results[i].isFinal)finalPart+=e.results[i][0].transcript+' ';else interim+=e.results[i][0].transcript+' '}
+    transcript=(collected+' '+finalPart+' '+interim).trim();
+    $('#heardText').textContent=transcript;$('#heardBox').hidden=false;
+  };
+  recognition.onerror=e=>{
+    if(e.error==='no-speech')return;
+    finishRequested=true;resetMic();$('#fallbackBox').hidden=false;
+    showToast(e.error==='not-allowed'?'Consenti il microfono oppure scrivi la risposta.':'Il microfono non è disponibile. Puoi scrivere la risposta.');
+  };
+  recognition.onend=()=>{
+    if(!finishRequested&&listening&&!answered){
+      collected=transcript;
+      try{recognition.start();return}catch(e){finishRequested=true}
+    }
+    resetMic();
+    if(finishRequested&&transcript.trim()&&!answered)evaluate(transcript);
+    else if(finishRequested&&!transcript.trim())showToast('Non ho sentito la risposta. Riprova.');
+  };
+  try{recognition.start()}catch(e){resetMic();$('#fallbackBox').hidden=false}
+}
 function evaluate(text){if(answered)return;resetMic();const q=QUESTIONS[index];$('#heardText').textContent=text;$('#heardBox').hidden=false;if(isCorrect(text,q)){answered=true;score++;$('#scoreValue').textContent=score;guideState('celebrate','Bravissimo! Hai conquistato una stella!');showFeedback(`Bravissimo! ★ ${q.teach}`,'good');$('#nextButton').hidden=false}else{attempts++;if(attempts<2){guideState('thinking','Quasi! Ti do un piccolo indizio…');showFeedback(`Quasi! Un piccolo indizio: ${q.answer}`,'try');$('#fallbackBox').hidden=false}else{answered=true;guideState('thinking','Un buon tentativo è già una scoperta!');showFeedback(`Buon tentativo! La risposta era: ${q.answer}`,'try');$('#nextButton').hidden=false}}
 }
 function showFeedback(text,type){const el=$('#feedback');el.textContent=text;el.className=`feedback ${type}`;el.hidden=false}

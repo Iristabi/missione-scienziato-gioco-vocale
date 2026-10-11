@@ -1,0 +1,46 @@
+const QUESTIONS = [
+  {category:'OSSERVAZIONE',icon:'🔍',question:'Qual è il primo passo del metodo sperimentale?',answer:'Osservare un fenomeno.',keys:[['osserv','fenomen']],teach:'Si comincia osservando con attenzione un fenomeno.'},
+  {category:'DOMANDA',icon:'❓',question:'Dopo aver osservato, che cosa fa lo scienziato?',answer:'Si pone una domanda.',keys:[['domand'],['problema']],teach:'Esatto: formula una domanda o un problema da risolvere.'},
+  {category:'IPOTESI',icon:'💭',question:'Che cos’è un’ipotesi?',answer:'Una possibile spiegazione.',keys:[['possibil','spieg'],['risposta','provvisor'],['idea','verific']],teach:'Un’ipotesi è una spiegazione possibile da verificare.'},
+  {category:'ESPERIMENTO',icon:'🧪',question:'Come si verifica un’ipotesi?',answer:'Con un esperimento.',keys:[['esperiment'],['prova']],teach:'Si prepara un esperimento o una prova.'},
+  {category:'VARIABILI',icon:'🎚️',question:'In un esperimento corretto, quante cose cambiamo alla volta?',answer:'Una sola cosa.',keys:[['una','cosa'],['una','variabil'],['solo','una']],teach:'Si cambia una sola variabile alla volta.'},
+  {category:'DATI',icon:'📊',question:'Che cosa raccogliamo durante un esperimento?',answer:'Dati e risultati.',keys:[['dat'],['risultat'],['misur'],['informaz']],teach:'Raccogliamo dati, misure e risultati.'},
+  {category:'CONCLUSIONE',icon:'🧩',question:'Che cosa facciamo dopo aver guardato i risultati?',answer:'Traiamo una conclusione.',keys:[['conclusion'],['decid'],['capire','ipotes']],teach:'Usiamo i risultati per arrivare a una conclusione.'},
+  {category:'IPOTESI DA CAMBIARE',icon:'🔄',question:'Se i risultati non confermano l’ipotesi, che cosa facciamo?',answer:'Cambiamo l’ipotesi e riproviamo.',keys:[['cambi','ipotes'],['nuov','ipotes'],['ripro'],['ripet']],teach:'Nessun problema: cambiamo l’ipotesi e proviamo di nuovo.'},
+  {category:'RIPETIZIONE',icon:'♻️',question:'Perché un esperimento si ripete?',answer:'Per controllare che il risultato sia affidabile.',keys:[['controll'],['conferm'],['sicuro'],['affidabil'],['stesso','risultat']],teach:'Ripetere serve a controllare che il risultato sia affidabile.'},
+  {category:'CONDIVISIONE',icon:'📣',question:'Alla fine, che cosa fa lo scienziato con le sue scoperte?',answer:'Comunica i risultati.',keys:[['comunic'],['condivid'],['raccont'],['present','risultat']],teach:'Lo scienziato comunica e condivide i risultati.'}
+];
+const $=s=>document.querySelector(s); const screens=['#startScreen','#gameScreen','#resultsScreen'];
+let index=0,score=0,attempts=0,soundOn=true,recognition=null,listening=false,answered=false;
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+let italianVoice=null;
+function chooseItalianVoice(){
+  if(!('speechSynthesis'in window))return null;
+  const voices=speechSynthesis.getVoices();
+  const italian=voices.filter(v=>/^it(?:-|_)/i.test(v.lang));
+  const preferred=['elsa','isabella','cosimo','alice','federica','diego','luca','google italiano'];
+  italianVoice=preferred.map(name=>italian.find(v=>v.name.toLowerCase().includes(name))).find(Boolean)
+    ||italian.find(v=>/natural|neural|premium|enhanced/i.test(v.name))
+    ||italian.find(v=>v.localService)
+    ||italian[0]
+    ||null;
+  return italianVoice;
+}
+if('speechSynthesis'in window){chooseItalianVoice();speechSynthesis.addEventListener?.('voiceschanged',chooseItalianVoice)}
+function normalize(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()}
+function isCorrect(text,q){const n=normalize(text);return q.keys.some(group=>group.every(k=>n.includes(normalize(k))))}
+function showScreen(id){screens.forEach(s=>$(s).classList.toggle('active',s===id))}
+function guideState(state,line){const guide=$('#guideWrap');guide.className=`guide-wrap ${state||''}`;if(line)$('#guideLine').textContent=line}
+function speak(text,after){if(!soundOn||!('speechSynthesis'in window)){after?.();return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const voice=italianVoice||chooseItalianVoice();u.lang='it-IT';if(voice)u.voice=voice;u.rate=.88;u.pitch=1;guideState('speaking',text);u.onend=()=>{guideState('',text);after?.()};u.onerror=()=>{guideState('',text);after?.()};speechSynthesis.speak(u)}
+function renderQuestion(){answered=false;attempts=0;const q=QUESTIONS[index];$('#progressLabel').textContent=`Missione ${index+1} di ${QUESTIONS.length}`;$('#progressFill').style.width=`${(index+1)/QUESTIONS.length*100}%`;$('#scoreValue').textContent=score;$('#category').textContent=q.category;$('#missionIcon').textContent=q.icon;$('#questionText').textContent=q.question;$('#feedback').hidden=true;$('#nextButton').hidden=true;$('#heardBox').hidden=true;$('#typedAnswer').value='';guideState('',q.question);resetMic();setTimeout(()=>speak(q.question),350)}
+function resetMic(){listening=false;$('#answerZone').classList.remove('listening');$('#micTitle').textContent=SpeechRecognition?'Premi il microfono':'Scrivi la risposta qui sotto';$('#micHelp').textContent=SpeechRecognition?'Poi rispondi con una frase breve':'Il riconoscimento vocale non è disponibile in questo browser';$('#fallbackBox').hidden=!!SpeechRecognition}
+function startGame(){index=0;score=0;showScreen('#gameScreen');renderQuestion()}
+function startListening(){if(answered)return;if(!SpeechRecognition){$('#fallbackBox').hidden=false;$('#typedAnswer').focus();return}if(listening){recognition?.stop();return}recognition=new SpeechRecognition();recognition.lang='it-IT';recognition.interimResults=false;recognition.maxAlternatives=3;recognition.continuous=false;recognition.onstart=()=>{listening=true;guideState('listening-guide','Ti ascolto! Raccontami la tua risposta.');$('#answerZone').classList.add('listening');$('#micTitle').textContent='Ti ascolto…';$('#micHelp').textContent='Parla ora!'};recognition.onresult=e=>{const choices=Array.from(e.results[0]).map(x=>x.transcript);const best=choices.find(t=>isCorrect(t,QUESTIONS[index]))||choices[0];evaluate(best)};recognition.onerror=e=>{resetMic();if(e.error==='not-allowed'||e.error==='service-not-allowed'){showToast('Microfono non autorizzato. Puoi scrivere la risposta.');$('#fallbackBox').hidden=false;$('#typedAnswer').focus()}else if(e.error==='no-speech'){showToast('Non ho sentito bene. Riprova o scrivi la risposta.');$('#fallbackBox').hidden=false}else{showToast('Il microfono non è disponibile. Usa la casella di testo.');$('#fallbackBox').hidden=false}};recognition.onend=()=>resetMic();try{recognition.start()}catch(e){resetMic()}}
+function evaluate(text){if(answered)return;resetMic();const q=QUESTIONS[index];$('#heardText').textContent=text;$('#heardBox').hidden=false;if(isCorrect(text,q)){answered=true;score++;$('#scoreValue').textContent=score;guideState('celebrate','Bravissimo! Hai conquistato una stella!');showFeedback(`Bravissimo! ★ ${q.teach}`,'good');speak(`Bravissimo! ${q.teach}`);$('#nextButton').hidden=false}else{attempts++;if(attempts<2){guideState('thinking','Quasi! Ti do un piccolo indizio…');showFeedback(`Quasi! Un piccolo indizio: ${q.answer}`,'try');speak(`Quasi! Prova ancora. Un piccolo indizio: ${q.answer}`);$('#fallbackBox').hidden=false}else{answered=true;guideState('thinking','Un buon tentativo è già una scoperta!');showFeedback(`Buon tentativo! La risposta era: ${q.answer}`,'try');speak(`Buon tentativo! ${q.teach}`);$('#nextButton').hidden=false}}
+}
+function showFeedback(text,type){const el=$('#feedback');el.textContent=text;el.className=`feedback ${type}`;el.hidden=false}
+function next(){if(index<QUESTIONS.length-1){index++;renderQuestion()}else finish()}
+function finish(){showScreen('#resultsScreen');$('#finalScore').textContent=score;$('#starLine').textContent='★'.repeat(score)+'☆'.repeat(QUESTIONS.length-score);let title=score===10?'Scienziato stellare!':score>=7?'Che scienziato!':score>=4?'Ottimo lavoro!':'La curiosità è il tuo superpotere!';let msg=score>=7?'Hai osservato, pensato e sperimentato alla grande.':'Ogni prova è una nuova scoperta. Giochiamo ancora?';$('#resultTitle').textContent=title;$('#resultMessage').textContent=msg;speak(`${title} Hai conquistato ${score} stelle su dieci.`)}
+function showToast(text){const t=$('#toast');t.textContent=text;t.hidden=false;clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.hidden=true,4000)}
+$('#startButton').onclick=startGame;$('#replayButton').onclick=startGame;$('#restartButton').onclick=()=>{if(confirm('Vuoi ricominciare dalla prima missione?'))startGame()};$('#micButton').onclick=startListening;$('#repeatButton').onclick=()=>speak(QUESTIONS[index].question);$('#nextButton').onclick=next;$('#checkTyped').onclick=()=>{const value=$('#typedAnswer').value.trim();if(value)evaluate(value);else showToast('Scrivi una risposta breve.')};$('#typedAnswer').addEventListener('keydown',e=>{if(e.key==='Enter')$('#checkTyped').click()});$('#soundToggle').onclick=()=>{soundOn=!soundOn;speechSynthesis?.cancel();$('#soundToggle').textContent=soundOn?'🔊':'🔇';$('#soundToggle').setAttribute('aria-pressed',String(!soundOn));$('#soundToggle').setAttribute('aria-label',soundOn?'Disattiva la voce':'Attiva la voce');showToast(soundOn?'Voce attivata':'Voce disattivata')};
+window.MissioneScienziato={QUESTIONS,normalize,isCorrect,chooseItalianVoice};

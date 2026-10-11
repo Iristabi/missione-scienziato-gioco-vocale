@@ -1,9 +1,14 @@
 const QUESTIONS = [
-  {category:'IPOTESI',icon:'💭',question:'Perché gli scienziati formulano ipotesi?',answer:'Per cercare di spiegare i fenomeni naturali.',keys:[['spieg','fenomen'],['capire','natura'],['capire','succede']],teach:'Le ipotesi aiutano a spiegare i fenomeni naturali.'},
-  {category:'SPIEGAZIONE',icon:'🧩',question:"Che cos'è un'ipotesi?",answer:'È una possibile spiegazione di qualcosa che succede.',keys:[['possibil','spieg'],['spieg','succede'],['idea','spieg']],teach:'Un’ipotesi è una possibile spiegazione di qualcosa che succede.'},
-  {category:'INDIZI',icon:'🔍',question:'A chi assomiglia uno scienziato quando formula ipotesi?',answer:'A un detective che cerca indizi e spiegazioni.',keys:[['detective'],['investigator']],teach:'Assomiglia a un detective che cerca indizi e spiegazioni.'},
-  {category:'ESPERIMENTI',icon:'🧪',question:'Perché gli scienziati fanno esperimenti?',answer:'Per verificare se le loro ipotesi sono giuste.',keys:[['verific','ipotes'],['controll','ipotes'],['ipotes','giust'],['ipotes','corrett']],teach:'Gli esperimenti servono a verificare se le ipotesi sono giuste.'},
-  {category:'MENTE E MANI',icon:'👐',question:'Che cosa usano gli scienziati per fare esperimenti?',answer:'Usano la mente per pensare e le mani per provare.',keys:[['mente','mani'],['pens','prov']],teach:'Usano la mente per pensare e le mani per provare.'}
+  {category:'SCIENZIATI',icon:'🔍',question:'Che cosa fanno gli scienziati?',answer:'Osservano e spiegano i fenomeni.',keys:[['osserv','spieg','fenomen']],teach:'Osservano e spiegano i fenomeni.'},
+  {category:'NATURA',icon:'⛈️',question:'Quale di questi è un fenomeno naturale?',answer:'Un temporale.',keys:[['temporal']],teach:'Un temporale.'},
+  {category:'METODO',icon:'🧪',question:'Come si chiama il metodo usato dagli scienziati?',answer:'Metodo scientifico.',keys:[['metodo','scientific']],teach:'Metodo scientifico.'},
+  {category:'PRIME FASI',icon:'💭',question:'Quali sono le prime tre fasi del metodo scientifico?',answer:'Osservare, fare domande, formulare ipotesi.',keys:[['osserv','domand','ipotes']],teach:'Osservare, fare domande, formulare ipotesi.'},
+  {category:'ULTIME FASI',icon:'📋',question:'Quali sono le ultime tre fasi?',answer:'Fare esperimenti, registrare dati, concludere.',keys:[['esperiment','dat','conclu']],teach:'Fare esperimenti, registrare dati, concludere.'},
+  {category:'IPOTESI',icon:'💭',question:'Perché gli scienziati formulano ipotesi?',answer:'Per cercare di spiegare i fenomeni.',keys:[['spieg','fenomen'],['capire','natura'],['capire','succede']],teach:'Per cercare di spiegare i fenomeni.'},
+  {category:'SPIEGAZIONE',icon:'🧩',question:"Che cos'è un'ipotesi?",answer:'Una possibile spiegazione.',keys:[['possibil','spieg'],['spieg','succede'],['idea','spieg']],teach:'Una possibile spiegazione.'},
+  {category:'INDIZI',icon:'🔍',question:'A chi assomiglia uno scienziato che cerca spiegazioni?',answer:'A un detective che cerca indizi.',keys:[['detective'],['investigator']],teach:'A un detective che cerca indizi.'},
+  {category:'ESPERIMENTI',icon:'🧪',question:'Perché gli scienziati fanno esperimenti?',answer:'Per verificare le ipotesi.',keys:[['verific','ipotes'],['controll','ipotes'],['ipotes','giust'],['ipotes','corrett']],teach:'Per verificare le ipotesi.'},
+  {category:'MENTE E MANI',icon:'👐',question:'Che cosa usano gli scienziati per fare esperimenti?',answer:'La mente per pensare e le mani per provare.',keys:[['mente','mani'],['pens','prov']],teach:'La mente per pensare e le mani per provare.'}
 ];
 const $=s=>document.querySelector(s); const screens=['#startScreen','#gameScreen','#resultsScreen'];
 let index=0,score=0,attempts=0,recognition=null,listening=false,answered=false,transcript='',finishRequested=false;
